@@ -3,14 +3,16 @@ using System.Threading;
 
 namespace PoormansTPL
 {
-    internal class PoormansSynchronization
+    internal class PoormansAwaiter
     {
         private volatile bool _signaled;
         private readonly object _internalLocker = new object();
 
-        private static readonly Lazy<PoormansSynchronization> LazyInstance = new Lazy<PoormansSynchronization>(() => new PoormansSynchronization(), true);
+        private static readonly Lazy<PoormansAwaiter> LazyInstance = new Lazy<PoormansAwaiter>(() => new PoormansAwaiter(), true);
 
-        public static PoormansSynchronization GetContext()
+        private PoormansAwaiter() {}
+
+        public static PoormansAwaiter GetContext()
         {
             return LazyInstance.Value;
         }

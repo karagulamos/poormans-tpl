@@ -41,7 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PoormansSynchronization.cs" />
+    <Compile Include="PoormansAwaiter.cs" />
     <Compile Include="PoormansTask.cs" />
     <Compile Include="PoormansFuture.cs" />
     <Compile Include="Program.cs" />

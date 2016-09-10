@@ -2,7 +2,6 @@ using System;
 
 namespace PoormansTPL
 {
-
     internal sealed class PoormansTask<TResult> : PoormansTask
     {
         private TResult _result;
