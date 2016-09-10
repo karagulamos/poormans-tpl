@@ -77,13 +77,10 @@ namespace PoormansTPL
 
             int completedTaskIndex = -1;
 
-            while (completedTaskIndex < 1)
+            while (completedTaskIndex < 0)
             {
                 awaiter.WaitAny();
                 completedTaskIndex = Array.FindIndex(tasks, t => t.HasCompleted());
-
-                if (completedTaskIndex > -1)
-                    break;
             }
 
             if (cancelRemainingTasks)
