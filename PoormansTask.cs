@@ -9,7 +9,6 @@ namespace PoormansTPL
         private Thread _worker;
         private readonly List<Exception> _exceptions = new List<Exception>();
         private readonly object _exceptionSyncLocker = new object();
-        private readonly PoormansAwaiter _awaiterContext = PoormansAwaiter.GetAwaiter();
 
         protected PoormansTask() { }
 
@@ -73,13 +72,13 @@ namespace PoormansTPL
 
         public static int WaitAny(PoormansTask[] tasks, bool cancelRemainingTasks)
         {
-            var awaiter = PoormansAwaiter.GetAwaiter();
+            var awaiterContext = PoormansAwaiter.GetAwaiter();
 
             int completedTaskIndex = -1;
 
             while (completedTaskIndex < 0)
             {
-                awaiter.WaitAny();
+                awaiterContext.WaitAny();
                 completedTaskIndex = Array.FindIndex(tasks, t => t.HasCompleted());
             }
 
@@ -115,6 +114,8 @@ namespace PoormansTPL
 
         protected void CreateNewThreadObject(Action action)
         {
+            var awaiterContext = PoormansAwaiter.GetAwaiter();
+
             _worker = new Thread(() =>
             {
                 try
@@ -128,7 +129,7 @@ namespace PoormansTPL
                 }
                 finally
                 {
-                    _awaiterContext.Signal();
+                    awaiterContext.Signal();
                 }
             }) { IsBackground = true };
 
