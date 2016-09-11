@@ -9,7 +9,7 @@ namespace PoormansTPL
         private Thread _worker;
         private readonly List<Exception> _exceptions = new List<Exception>();
         private readonly object _exceptionSyncLocker = new object();
-        private readonly PoormansAwaiter _awaiterContext = PoormansAwaiter.GetContext();
+        private readonly PoormansAwaiter _awaiterContext = PoormansAwaiter.GetAwaiter();
 
         protected PoormansTask() { }
 
@@ -73,7 +73,7 @@ namespace PoormansTPL
 
         public static int WaitAny(PoormansTask[] tasks, bool cancelRemainingTasks)
         {
-            var awaiter = PoormansAwaiter.GetContext();
+            var awaiter = PoormansAwaiter.GetAwaiter();
 
             int completedTaskIndex = -1;
 

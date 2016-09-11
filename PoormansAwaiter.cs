@@ -12,7 +12,7 @@ namespace PoormansTPL
 
         private PoormansAwaiter() {}
 
-        public static PoormansAwaiter GetContext()
+        public static PoormansAwaiter GetAwaiter()
         {
             return LazyInstance.Value;
         }
