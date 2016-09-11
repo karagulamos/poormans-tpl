@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace PoormansTPL
 {
-    internal class PoormansAwaiter
+    internal sealed class PoormansAwaiter
     {
         private volatile bool _signaled;
         private readonly object _internalLocker = new object();
