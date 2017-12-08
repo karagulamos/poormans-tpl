@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="PoormansAwaiter.cs" />
     <Compile Include="PoormansTask.cs" />
-    <Compile Include="PoormansFuture.cs" />
+    <Compile Include="PoormansSynchronizer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

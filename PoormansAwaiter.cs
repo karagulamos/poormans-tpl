@@ -1,52 +1,39 @@
 ﻿using System;
-using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace PoormansTPL
 {
-    internal sealed class PoormansAwaiter
+    internal class PoormansAwaiter : INotifyCompletion
     {
-        private volatile bool _signaled;
-        private readonly object _internalLocker = new object();
+        protected readonly PoormansTask Task;
 
-        private static readonly Lazy<PoormansAwaiter> LazyInstance = new Lazy<PoormansAwaiter>(() => new PoormansAwaiter(), true);
-
-        private PoormansAwaiter() {}
-
-        public static PoormansAwaiter GetAwaiter()
+        public PoormansAwaiter(PoormansTask task)
         {
-            return LazyInstance.Value;
+            Task = task;
         }
 
-        public bool Wait()
+        public bool IsCompleted => Task.HasCompleted();
+
+        public void OnCompleted(Action continuation)
         {
-            bool status = false;
-
-            lock (_internalLocker)
-            {
-                while (!_signaled)
-                    status = Monitor.Wait(_internalLocker);
-                _signaled = false;
-            }
-
-            return status;
+            continuation();
         }
 
-        public void Signal()
+        public void GetResult()
         {
-            lock (_internalLocker)
-            {
-                _signaled = true;
-                Monitor.PulseAll(_internalLocker);
-            }
+            Task.Wait();
+        }
+    }
+
+    internal class PoormansAwaiter<TResult> : PoormansAwaiter
+    {
+        public PoormansAwaiter(PoormansTask poormansTask) : base(poormansTask)
+        {
         }
 
-        public void WaitAny()
+        public new TResult GetResult()
         {
-            lock (_internalLocker)
-            {
-                while (!_signaled)
-                    Monitor.Wait(_internalLocker);
-            }
+            return ((PoormansTask<TResult>)Task).Result;
         }
     }
 }

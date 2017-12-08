@@ -1,3 +1,7 @@
+// Author: Alexander Karagulamos
+// Date:
+// Comment:
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,7 +12,7 @@ namespace PoormansTPL
     {
         private Thread _worker;
         private readonly List<Exception> _exceptions = new List<Exception>();
-        private readonly object _exceptionSyncLocker = new object();
+        private readonly object _exceptionMonitor = new object();
 
         protected PoormansTask() { }
 
@@ -17,11 +21,16 @@ namespace PoormansTPL
             this.CreateNewThreadObject(action);
         }
 
+        public PoormansAwaiter GetAwaiter()
+        {
+            return new PoormansAwaiter(this);
+        }
+
         public IReadOnlyList<Exception> Exceptions
         {
             get
             {
-                lock (_exceptionSyncLocker)
+                lock (_exceptionMonitor)
                     return _exceptions;
             }
         }
@@ -72,13 +81,13 @@ namespace PoormansTPL
 
         public static int WaitAny(PoormansTask[] tasks, bool cancelRemainingTasks)
         {
-            var awaiterContext = PoormansAwaiter.GetAwaiter();
+            var sychronizer = PoormansSynchronizer.Get();
 
             int completedTaskIndex = -1;
 
             while (completedTaskIndex < 0)
             {
-                awaiterContext.WaitAny();
+                sychronizer.WaitAny();
                 completedTaskIndex = Array.FindIndex(tasks, t => t.HasCompleted());
             }
 
@@ -105,7 +114,7 @@ namespace PoormansTPL
 
         protected void ThrowAggregateExceptionIfFaulted()
         {
-            lock (_exceptionSyncLocker)
+            lock (_exceptionMonitor)
             {
                 if (_exceptions.Count > 0)
                     throw new AggregateException(_exceptions);
@@ -114,7 +123,7 @@ namespace PoormansTPL
 
         protected void CreateNewThreadObject(Action action)
         {
-            var awaiterContext = PoormansAwaiter.GetAwaiter();
+            var sychronizer = PoormansSynchronizer.Get();
 
             _worker = new Thread(() =>
             {
@@ -124,15 +133,60 @@ namespace PoormansTPL
                 }
                 catch (Exception exception)
                 {
-                    lock (_exceptionSyncLocker)
+                    lock (_exceptionMonitor)
                         _exceptions.Add(exception);
                 }
                 finally
                 {
-                    awaiterContext.Signal();
+                    sychronizer.Signal();
                 }
-            }) { IsBackground = true };
+            })
+            { IsBackground = true };
 
+        }
+    }
+
+    internal sealed class PoormansTask<TResult> : PoormansTask
+    {
+        private TResult _result;
+
+        public PoormansTask(Func<TResult> action)
+        {
+            base.CreateNewThreadObject(() => _result = action());
+        }
+
+        public TResult Result
+        {
+            get
+            {
+                base.Wait();
+                return _result;
+            }
+        }
+
+        public new PoormansAwaiter<TResult> GetAwaiter()
+        {
+            return new PoormansAwaiter<TResult>(this);
+        }
+
+        // The WaitAll & WaitAny implementations below are static shadows of the base implementation
+        // used to suppress Resharper / IDE warnings around co-variant conversions between generic
+        // and non-generic invocations of these methods in client code. Nevertheless, this works just
+        // fine in our particular case.
+
+        public static void WaitAll(params PoormansTask<TResult>[] parallelTasks)
+        {
+            PoormansTask.WaitAll(parallelTasks);
+        }
+
+        public static int WaitAny(params PoormansTask<TResult>[] parallelTasks)
+        {
+            return PoormansTask.WaitAny(parallelTasks);
+        }
+
+        public static int WaitAny(PoormansTask<TResult>[] parallelTasks, bool cancelRemainingTasks)
+        {
+            return PoormansTask.WaitAny(parallelTasks, cancelRemainingTasks);
         }
     }
 }

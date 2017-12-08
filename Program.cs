@@ -12,7 +12,7 @@ namespace PoormansTPL
 
             var stopWatch = new Stopwatch();
 
-            var downloadTasks = new PoormansTask<Tuple<string, string>>[4]
+            var downloadTasks = new[]
             {
                 new PoormansTask<Tuple<string, string>>(() =>
                 {
@@ -28,14 +28,14 @@ namespace PoormansTPL
                     Console.WriteLine("Facebook.com - should not display if cancelled");
                     return new Tuple<string, string>("Facebook.com", result);
                 }), 
-                 new PoormansTask<Tuple<string, string>>(() =>
+                new PoormansTask<Tuple<string, string>>(() =>
                 {
                     Console.WriteLine("Downloading Goal.com");
                     var result = DownloadSite("http://goal.com");
                     Console.WriteLine("Goal.com - should not display if cancelled");
                     return new Tuple<string, string>("Goal.com", result);
                 } ), 
-                 new PoormansTask<Tuple<string, string>>(() =>
+                new PoormansTask<Tuple<string, string>>(() =>
                 {
                     Console.WriteLine("Downloading Yahoo.com");
                     var result = DownloadSite("http://yahoo.com");
@@ -51,7 +51,7 @@ namespace PoormansTPL
                 task.Start();
             }
 
-            int finishedTaskId = PoormansTask.WaitAny(downloadTasks, true); // alter the flag to observe behavior of the tasks
+            int finishedTaskId = PoormansTask<Tuple<string, string>>.WaitAny(downloadTasks, true); // alter the flag to observe behavior of the tasks
 
             stopWatch.Stop();
 
