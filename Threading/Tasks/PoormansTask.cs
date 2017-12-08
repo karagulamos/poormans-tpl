@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace PoormansTPL
+namespace PoormansTPL.Threading.Tasks
 {
     internal class PoormansTask
     {
@@ -79,7 +79,7 @@ namespace PoormansTPL
             return WaitAny(tasks, false);
         }
 
-        public static int WaitAny(PoormansTask[] tasks, bool cancelRemainingTasks)
+        public static int WaitAny(PoormansTask[] tasks, bool cancelUnfinishedTasks)
         {
             var sychronizer = PoormansSynchronizer.Get();
 
@@ -91,7 +91,7 @@ namespace PoormansTPL
                 completedTaskIndex = Array.FindIndex(tasks, t => t.HasCompleted());
             }
 
-            if (cancelRemainingTasks)
+            if (cancelUnfinishedTasks)
             {
                 foreach (var task in tasks)
                 {
@@ -167,26 +167,6 @@ namespace PoormansTPL
         public new PoormansAwaiter<TResult> GetAwaiter()
         {
             return new PoormansAwaiter<TResult>(this);
-        }
-
-        // The WaitAll & WaitAny implementations below are static shadows of the base implementation
-        // used to suppress Resharper / IDE warnings around co-variant conversions between generic
-        // and non-generic invocations of these methods in client code. Nevertheless, this works just
-        // fine in our particular case.
-
-        public static void WaitAll(params PoormansTask<TResult>[] parallelTasks)
-        {
-            PoormansTask.WaitAll(parallelTasks);
-        }
-
-        public static int WaitAny(params PoormansTask<TResult>[] parallelTasks)
-        {
-            return PoormansTask.WaitAny(parallelTasks);
-        }
-
-        public static int WaitAny(PoormansTask<TResult>[] parallelTasks, bool cancelRemainingTasks)
-        {
-            return PoormansTask.WaitAny(parallelTasks, cancelRemainingTasks);
         }
     }
 }

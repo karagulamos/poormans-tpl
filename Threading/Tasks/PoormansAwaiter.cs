@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace PoormansTPL
+namespace PoormansTPL.Threading.Tasks
 {
     internal class PoormansAwaiter : INotifyCompletion
     {

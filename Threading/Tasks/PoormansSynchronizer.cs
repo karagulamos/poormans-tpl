@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace PoormansTPL
+namespace PoormansTPL.Threading.Tasks
 {
     internal class PoormansSynchronizer
     {
