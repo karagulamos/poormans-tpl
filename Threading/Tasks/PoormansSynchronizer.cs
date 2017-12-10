@@ -10,7 +10,7 @@ namespace PoormansTPL.Threading.Tasks
 
         private static readonly Lazy<PoormansSynchronizer> LazyInstance = new Lazy<PoormansSynchronizer>(() => new PoormansSynchronizer(), true);
 
-        private PoormansSynchronizer() { }
+        private PoormansSynchronizer() {}
 
         public static PoormansSynchronizer Get()
         {
