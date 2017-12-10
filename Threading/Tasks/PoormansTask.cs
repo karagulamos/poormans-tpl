@@ -118,6 +118,7 @@ namespace PoormansTPL.Threading.Tasks
             lock (_exceptionMonitor)
             {
                 if (_exceptions.Count > 0)
+
                     throw new AggregateException(_exceptions);
             }
         }
@@ -125,7 +126,7 @@ namespace PoormansTPL.Threading.Tasks
         protected void CreateTask(Action action)
         {
             var sychronizer = PoormansSynchronizer.Get();
-
+            
             _worker = new Thread(() =>
             {
                 try
@@ -143,7 +144,6 @@ namespace PoormansTPL.Threading.Tasks
                 }
             })
             { IsBackground = true };
-
         }
     }
 

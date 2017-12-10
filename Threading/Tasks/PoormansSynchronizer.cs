@@ -6,7 +6,7 @@ namespace PoormansTPL.Threading.Tasks
     internal class PoormansSynchronizer
     {
         private volatile bool _signaled;
-        private readonly object _internalLocker = new object();
+        private readonly object _internalMonitor = new object();
 
         private static readonly Lazy<PoormansSynchronizer> LazyInstance = new Lazy<PoormansSynchronizer>(() => new PoormansSynchronizer(), true);
 
@@ -21,10 +21,10 @@ namespace PoormansTPL.Threading.Tasks
         {
             bool status = false;
 
-            lock (_internalLocker)
+            lock (_internalMonitor)
             {
                 while (!_signaled)
-                    status = Monitor.Wait(_internalLocker);
+                    status = Monitor.Wait(_internalMonitor);
                 _signaled = false;
             }
 
@@ -33,19 +33,19 @@ namespace PoormansTPL.Threading.Tasks
 
         public void Signal()
         {
-            lock (_internalLocker)
+            lock (_internalMonitor)
             {
                 _signaled = true;
-                Monitor.PulseAll(_internalLocker);
+                Monitor.PulseAll(_internalMonitor);
             }
         }
 
         public void WaitAny()
         {
-            lock (_internalLocker)
+            lock (_internalMonitor)
             {
                 while (!_signaled)
-                    Monitor.Wait(_internalLocker);
+                    Monitor.Wait(_internalMonitor);
             }
         }
     }
