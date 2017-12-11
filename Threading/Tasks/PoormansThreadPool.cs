@@ -9,9 +9,6 @@ namespace PoormansTPL.Threading.Tasks
         private readonly ConcurrentQueue<Action> _workQueue;
         private readonly ConcurrentDictionary<PoormansWorkerThread, bool> _workerThreads;
 
-        public PoormansThreadPool() : this(0, Environment.ProcessorCount)
-        { }
-
         public void EnqueueTask(Action task)
         {
             _workQueue.Enqueue(task);
@@ -34,9 +31,9 @@ namespace PoormansTPL.Threading.Tasks
 
         private void ManageWorkerThreads()
         {
-            var idleTime = TimeSpan.FromSeconds(1);
+            var idleTime = MaximumIdleTime;
 
-            while (_managementThreadCanRun)
+            while (_managerThreadCanRun)
             {
                 if (_workerThreads.Count <= MinimumWorkersAllowed)
                     continue;
@@ -54,23 +51,27 @@ namespace PoormansTPL.Threading.Tasks
                     _workerThreads.TryRemove(workerThread, out result);
                 }
 
-                _managementThread.Join(idleTime);
+                try
+                {
+                    Thread.Sleep(idleTime);
+                }
+                catch { /* ignore */ }
             }
         }
 
         public void Shutdown()
         {
-            _managementThreadCanRun = false;
+            _managerThreadCanRun = false;
 
-            if (_managementThread == null) return;
+            if (_managerThread == null) return;
 
-            if (_managementThread.ThreadState == ThreadState.WaitSleepJoin)
+            if (_managerThread.ThreadState == ThreadState.WaitSleepJoin)
             {
-                _managementThread.Interrupt();
+                _managerThread.Interrupt();
             }
 
-            _managementThread.Join();
-            _managementThread = null;
+            _managerThread.Join();
+            _managerThread = null;
 
             foreach (var workerThread in _workerThreads.Keys)
             {
@@ -89,10 +90,10 @@ namespace PoormansTPL.Threading.Tasks
         private int MaximumWorkersAllowed { get; }
         private TimeSpan MaximumIdleTime { get; } = TimeSpan.FromSeconds(5);
 
-        private Thread _managementThread;
-        private bool _managementThreadCanRun;
+        private Thread _managerThread;
+        private bool _managerThreadCanRun;
 
-        public PoormansThreadPool(int minimumThreads, int maximumThreads, TimeSpan maximumIdleTimeBeforeRecycle = default(TimeSpan))
+        public PoormansThreadPool(int minimumThreads, int maximumThreads, TimeSpan maximumIdleTimeBeforeRecycle)
         {
             _workQueue = new ConcurrentQueue<Action>();
             _workerThreads = new ConcurrentDictionary<PoormansWorkerThread, bool>();
@@ -101,12 +102,23 @@ namespace PoormansTPL.Threading.Tasks
             MaximumWorkersAllowed = maximumThreads;
             MaximumIdleTime = maximumIdleTimeBeforeRecycle == default(TimeSpan) ? MaximumIdleTime : maximumIdleTimeBeforeRecycle;
 
-            _managementThread = new Thread(ManageWorkerThreads)
+            _managerThread = new Thread(ManageWorkerThreads)
             {
                 IsBackground = true
             };
-            _managementThreadCanRun = true;
-            _managementThread.Start();
+            _managerThreadCanRun = true;
+            _managerThread.Start();
         }
+
+        public PoormansThreadPool() : this(Environment.ProcessorCount)
+        { }
+
+        public PoormansThreadPool(int minimumThreads)
+        : this(minimumThreads, Environment.ProcessorCount * 100)
+        { }
+
+        public PoormansThreadPool(int minimumThreads, int maximumThreads)
+        : this(minimumThreads, maximumThreads, default(TimeSpan))
+        { }
     }
 }

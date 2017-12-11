@@ -28,25 +28,27 @@ namespace PoormansTPL.Threading.Tasks
 
         private void ManageEnqueuedTasks()
         {
-            var idleTime = TimeSpan.FromMilliseconds(1);
+            var idleTime = TimeSpan.FromMilliseconds(100);
 
             while (_workerThreadCanRun)
             {
                 try
                 {
-                    while (_taskQueue.Count > 0)
+                    Action task;
+                    while (_taskQueue.TryDequeue(out task))
                     {
-                        Action task;
-                       _taskQueue.TryDequeue(out task);
-
                         LastRun = DateTime.Now;
-                        task?.Invoke();
+                        task.Invoke();
                     }
                 }
                 catch { /* ignored */ }
 
-                IsBusy = false;
-                _workerThread.Join(idleTime);
+                try
+                {
+                    IsBusy = false;
+                    Thread.Sleep(idleTime);
+                }
+                catch { /* ignored */ }
             }
         }
 
@@ -62,8 +64,8 @@ namespace PoormansTPL.Threading.Tasks
         {
             if (_workerThread == null) return;
 
-            IsBusy = false;
             _workerThreadCanRun = false;
+            IsBusy = false;
 
             if (_workerThread.ThreadState == ThreadState.WaitSleepJoin)
                 _workerThread.Interrupt();
