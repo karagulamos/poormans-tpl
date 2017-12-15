@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace PoormansTPL
 {
@@ -10,13 +11,78 @@ namespace PoormansTPL
     {
         public static void Main(string[] args)
         {
+            RunTplUsingPoormansThreadPoolScheduler();
+
             //RunAwaitablePoormansTaskExample();
 
-            RunPoormansTaskExample();
+            //RunPoormansTaskExample();
 
             //RunCustomThreadPoolExample();
 
             Console.ReadKey(true);
+        }
+
+        private static void RunTplUsingPoormansThreadPoolScheduler()
+        {
+            var stopWatch = new Stopwatch();
+
+            var downloadTasks = new[]
+            {
+                new Task<Tuple<string, string>>(() =>
+                {
+                    Console.WriteLine("Downloading Microsoft.com");
+                    var result = DownloadSite("http://microsoft.com");
+                    Console.WriteLine("Microsoft.com - should not display confirmation if cancelled");
+                    return new Tuple<string, string>("Microsoft.com", result);
+                }),
+                new Task<Tuple<string, string>>(() =>
+                {
+                    Console.WriteLine("Downloading Facebook.com");
+                    var result = DownloadSite("http://facebook.com");
+                    Console.WriteLine("Facebook.com - should not display confirmation if cancelled");
+                    return new Tuple<string, string>("Facebook.com", result);
+                }),
+                new Task<Tuple<string, string>>(() =>
+                {
+                    Console.WriteLine("Downloading Goal.com");
+                    var result = DownloadSite("http://goal.com");
+                    Console.WriteLine("Goal.com - should not display confirmation if cancelled");
+                    return new Tuple<string, string>("Goal.com", result);
+                }),
+                new Task<Tuple<string, string>>(() =>
+                {
+                    Console.WriteLine("Downloading Yahoo.com");
+                    var result = DownloadSite("http://yahoo.com");
+                    Console.WriteLine("Yahoo.com - should not display confirmation if cancelled");
+                    return new Tuple<string, string>("Yahoo.com", result);
+                }),
+                new Task<Tuple<string, string>>(() =>
+                {
+                    Console.WriteLine("Downloading Google.com");
+                    var result = DownloadSite("http://google.com");
+                    Console.WriteLine("Google.com - should not display confirmation if cancelled");
+                    return new Tuple<string, string>("Google.com", result);
+                })
+            };
+
+            stopWatch.Start();
+
+            var scheduler = new PoormansThreadPoolTaskScheduler();
+
+            foreach (var task in downloadTasks)
+            {
+                task.Start(scheduler);
+            }
+
+            var taskId = Task.WaitAny(downloadTasks);
+            // Observe behaviour when flag to cancel unfinished tasks is removed
+
+            stopWatch.Stop();
+
+            Console.WriteLine("{0} [{1}] finished first in {2} seconds", downloadTasks[taskId].Result.Item1, taskId,
+                stopWatch.Elapsed.TotalSeconds);
+
+            Console.WriteLine("Press any key to exit...");
         }
 
         private static async void RunAwaitablePoormansTaskExample()

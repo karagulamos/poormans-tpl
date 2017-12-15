@@ -46,6 +46,7 @@
     <Compile Include="Threading\Tasks\PoormansSynchronizer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Threading\Tasks\PoormansThreadPoolTaskScheduler.cs" />
     <Compile Include="Threading\Tasks\PoormansWorkerThread.cs" />
     <Compile Include="Threading\Tasks\PoormansThreadPool.cs" />
   </ItemGroup>
