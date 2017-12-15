@@ -23,7 +23,9 @@ namespace PoormansTPL.Threading.Tasks
                 break;
             }
 
-            if (foundIdleWorkerToPerformTask || _workerThreads.Count >= MaximumWorkersAllowed)
+            if (_workerThreads.Count > MinimumWorkersAllowed 
+                && foundIdleWorkerToPerformTask 
+                || _workerThreads.Count >= MaximumWorkersAllowed)
                 return;
 
             _workerThreads.TryAdd(new PoormansWorkerThread(_workQueue), true);
@@ -35,27 +37,33 @@ namespace PoormansTPL.Threading.Tasks
 
             while (_managerThreadCanRun)
             {
-                if (_workerThreads.Count <= MinimumWorkersAllowed)
-                    continue;
-
-                foreach (var workerThread in _workerThreads.Keys)
-                {
-                    TimeSpan lastExecutionTime = DateTime.Now.Subtract(workerThread.LastRun);
-
-                    if (lastExecutionTime <= MaximumIdleTime)
-                        continue;
-
-                    workerThread.Shutdown();
-
-                    bool result;
-                    _workerThreads.TryRemove(workerThread, out result);
-                }
-
                 try
                 {
-                    Thread.Sleep(idleTime);
+                    if (_workerThreads.Count >= MinimumWorkersAllowed)
+                        continue;
+
+                    foreach (var workerThread in _workerThreads.Keys)
+                    {
+                        TimeSpan lastExecutionTime = DateTime.Now.Subtract(workerThread.LastRun);
+
+                        if (lastExecutionTime <= MaximumIdleTime || workerThread.IsBusy)
+                            continue;
+
+                        workerThread.Shutdown();
+
+                        bool result;
+                        _workerThreads.TryRemove(workerThread, out result);
+                    }
                 }
-                catch { /* ignore */ }
+                finally
+                {
+                    try
+                    {
+                        Thread.Yield();
+                        Thread.Sleep(idleTime);
+                    }
+                    catch { /* ignore */ }
+                }
             }
         }
 
@@ -71,6 +79,7 @@ namespace PoormansTPL.Threading.Tasks
             }
 
             _managerThread.Join();
+
             _managerThread = null;
 
             foreach (var workerThread in _workerThreads.Keys)
@@ -114,11 +123,31 @@ namespace PoormansTPL.Threading.Tasks
         { }
 
         public PoormansThreadPool(int minimumThreads)
-        : this(minimumThreads, Environment.ProcessorCount * 100)
+        : this(minimumThreads, Environment.ProcessorCount * 25)
         { }
 
         public PoormansThreadPool(int minimumThreads, int maximumThreads)
         : this(minimumThreads, maximumThreads, default(TimeSpan))
         { }
+
+        private static readonly Lazy<PoormansThreadPool> LazyPool = new Lazy<PoormansThreadPool>();
+
+        internal static void EnqueueTaskInternal(Action action)
+        {
+            LazyPool.Value.EnqueueTask(action);
+        }
+
+        internal static void CancelTasksInternal()
+        {
+            LazyPool.Value.ForceAbort();
+        }
+
+        private void ForceAbort()
+        {
+            foreach (var workerThread in _workerThreads.Keys)
+            {
+                workerThread.Abort();
+            }
+        }
     }
 }

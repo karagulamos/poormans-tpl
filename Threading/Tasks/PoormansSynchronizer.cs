@@ -7,10 +7,9 @@ namespace PoormansTPL.Threading.Tasks
     {
         private volatile bool _signaled;
         private readonly object _internalMonitor = new object();
-
         private static readonly Lazy<PoormansSynchronizer> LazyInstance = new Lazy<PoormansSynchronizer>(() => new PoormansSynchronizer(), true);
 
-        private PoormansSynchronizer() {}
+        private PoormansSynchronizer() { }
 
         public static PoormansSynchronizer Get()
         {

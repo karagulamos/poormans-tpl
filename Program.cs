@@ -10,9 +10,9 @@ namespace PoormansTPL
     {
         public static void Main(string[] args)
         {
-            RunAwaitablePoormansTaskExample();
+            //RunAwaitablePoormansTaskExample();
 
-            //RunPoormansTaskExample();
+            RunPoormansTaskExample();
 
             //RunCustomThreadPoolExample();
 

@@ -12,7 +12,7 @@ namespace PoormansTPL.Threading.Tasks
             Task = task;
         }
 
-        public bool IsCompleted => Task.HasCompleted();
+        public bool IsCompleted => Task.HasCompleted;
 
         public void OnCompleted(Action continuation)
         {
