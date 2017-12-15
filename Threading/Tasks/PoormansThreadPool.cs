@@ -79,7 +79,6 @@ namespace PoormansTPL.Threading.Tasks
             }
 
             _managerThread.Join();
-
             _managerThread = null;
 
             foreach (var workerThread in _workerThreads.Keys)
